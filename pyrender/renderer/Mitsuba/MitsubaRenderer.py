@@ -74,6 +74,7 @@ class MitsubaRenderer(AbstractRenderer):
 
             center = 0.5 * (self.transformed_bbox_min + self.transformed_bbox_max);
             self.floor_height = self.transformed_bbox_min[1] - center[1];
+            print("floot height: ", self.floor_height)
         else:
             dim = active_view.vertices.shape[1];
             self.transformed_bbox_min = np.zeros(dim);
@@ -119,9 +120,23 @@ class MitsubaRenderer(AbstractRenderer):
             "intensity": Spectrum(5.0)
             });
 
+        out_light = self.plgr.create({
+            "type": "constant",
+            "radiance": Spectrum(0.5),
+            "samplingWeight": 10.0
+            });
+
+        env_light = self.plgr.create({
+            "type": "envmap",
+            "filename": "/home/jdumas/downloads/mitsuba/render/uffizi-large.exr",
+            # "filename": "/home/jdumas/downloads/mitsuba/render/envmap.exr",
+            "samplingWeight": 10.0,
+            "scale": 0.4
+        });
+
         self.mitsuba_scene.addChild(front_light);
-        #self.mitsuba_scene.addChild(side_light);
-        #self.mitsuba_scene.addChild(back_light);
+        self.mitsuba_scene.addChild(env_light);
+        # self.mitsuba_scene.addChild(back_light);
 
     def __add_active_camera(self):
         active_view = self.scene.active_view;
@@ -165,7 +180,7 @@ class MitsubaRenderer(AbstractRenderer):
                 },
             "sampler": {
                 "type": "halton",
-                "sampleCount": 4,
+                "sampleCount": 8,
                 }
             });
         self.mitsuba_scene.addChild(mitsuba_camera);
@@ -456,7 +471,7 @@ class MitsubaRenderer(AbstractRenderer):
         if self.scene.active_view.background == "d":
             reflectance = Spectrum(0.05);
         elif self.scene.active_view.background == "l":
-            reflectance = Spectrum(0.5);
+            reflectance = Spectrum(1.0);
         else:
             reflectance = Spectrum(0.0);
 
