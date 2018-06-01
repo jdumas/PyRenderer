@@ -1314,9 +1314,9 @@ color_maps = {
                 1.000: hex2rgb("#99D594"),
                 },
         "discrete_4": {
-                0.000: hex2rgb("#F28C58"),
-                0.333: hex2rgb("#EFE442"),
-                0.666: hex2rgb("#99D594"),
-                1.000: hex2rgb("#57B4E9"),
+                0.000: hex2rgb("#FFEAA7"),
+                0.333: hex2rgb("#FAB1A0"),
+                0.666: hex2rgb("#FF7675"),
+                1.000: hex2rgb("#FD79A8"),
                 },
         };

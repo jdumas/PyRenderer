@@ -88,7 +88,6 @@ class MitsubaRenderer(AbstractRenderer):
                 "rrDepth": 20
                 });
         else:
-            print("DIRECT")
             integrator = self.plgr.create({
                 "type": "direct",
                 "shadingSamples": 16
@@ -209,7 +208,7 @@ class MitsubaRenderer(AbstractRenderer):
                 "type": ext[1:],
                 "filename": mesh_file,
                 "faceNormals": True,
-                "toWorld": total_transform
+                "toWorld": total_transform,
                 }
         setting.update(material_setting);
         target_shape = self.plgr.create(setting);
