@@ -62,7 +62,21 @@ class MitsubaRenderer(AbstractRenderer):
         active_view = self.scene.active_view;
         self.global_transform = self.scene.global_transform;
         self.floor_height = None;
-        if len(active_view.vertices) == 0:
+        if len(active_view.vertices) > 0:
+            global_rotation = self.scene.global_transform[:3, :3];
+
+            vertices = (active_view.vertices - active_view.center) * active_view.scale;
+            vertices = np.dot(active_view.rotation, vertices.T) +\
+                    active_view.translation[:, np.newaxis];
+            vertices = np.dot(global_rotation, vertices);
+            vertices = vertices.T;
+            self.transformed_bbox_min = np.amin(vertices, axis=0);
+            self.transformed_bbox_max = np.amax(vertices, axis=0);
+
+            center = 0.5 * (self.transformed_bbox_min + self.transformed_bbox_max);
+            self.floor_height = self.transformed_bbox_min[1] - center[1];
+            print("floot height: ", self.floor_height)
+        else:
             dim = active_view.vertices.shape[1];
             self.transformed_bbox_min = np.zeros(dim);
             self.transformed_bbox_max = np.ones(dim);
@@ -121,7 +135,7 @@ class MitsubaRenderer(AbstractRenderer):
 
         self.mitsuba_scene.addChild(front_light);
         self.mitsuba_scene.addChild(env_light);
-        # self.mitsuba_scene.addChild(back_light)
+        # self.mitsuba_scene.addChild(back_light);
 
     def __add_active_camera(self):
         active_view = self.scene.active_view;
