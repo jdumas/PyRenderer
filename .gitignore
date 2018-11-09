@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Mipmap files
+*.mip
+
 # Distribution / packaging
 .Python
 env/

@@ -17,6 +17,8 @@ from pyrender.renderer.AbstractRenderer import AbstractRenderer
 import pymesh
 from .serialization import serialize_mesh
 
+ENVMAP_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "envmap")
+
 class MitsubaRenderer(AbstractRenderer):
     def __init__(self, scene):
         super(MitsubaRenderer, self).__init__(scene);
@@ -127,8 +129,7 @@ class MitsubaRenderer(AbstractRenderer):
 
         env_light = self.plgr.create({
             "type": "envmap",
-            "filename": "/home/jdumas/downloads/mitsuba/render/uffizi-large.exr",
-            # "filename": "/home/jdumas/downloads/mitsuba/render/envmap.exr",
+            "filename": os.path.join(ENVMAP_DIR, "uffizi-large.exr"),
             "samplingWeight": 10.0,
             "scale": 0.4
         });
