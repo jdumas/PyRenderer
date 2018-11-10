@@ -17,6 +17,8 @@ from pyrender.renderer.AbstractRenderer import AbstractRenderer
 import pymesh
 from .serialization import serialize_mesh
 
+ENVMAP_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "envmap")
+
 class MitsubaRenderer(AbstractRenderer):
     def __init__(self, scene):
         super(MitsubaRenderer, self).__init__(scene);
@@ -61,8 +63,22 @@ class MitsubaRenderer(AbstractRenderer):
     def __initialize_geometry_setting(self):
         active_view = self.scene.active_view;
         self.global_transform = self.scene.global_transform;
-        self.floor_height = 1e-12;
-        if len(active_view.vertices) == 0:
+        self.floor_height = None;
+        if len(active_view.vertices) > 0:
+            global_rotation = self.scene.global_transform[:3, :3];
+
+            vertices = (active_view.vertices - active_view.center) * active_view.scale;
+            vertices = np.dot(active_view.rotation, vertices.T) +\
+                    active_view.translation[:, np.newaxis];
+            vertices = np.dot(global_rotation, vertices);
+            vertices = vertices.T;
+            self.transformed_bbox_min = np.amin(vertices, axis=0);
+            self.transformed_bbox_max = np.amax(vertices, axis=0);
+
+            center = 0.5 * (self.transformed_bbox_min + self.transformed_bbox_max);
+            self.floor_height = self.transformed_bbox_min[1] - center[1];
+            print("floot height: ", self.floor_height)
+        else:
             dim = active_view.vertices.shape[1];
             self.transformed_bbox_min = np.zeros(dim);
             self.transformed_bbox_max = np.ones(dim);
@@ -81,7 +97,7 @@ class MitsubaRenderer(AbstractRenderer):
         self.mitsuba_scene.addChild(integrator);
 
     def __add_lights(self):
-        #TODO: load lights from scene
+       #TODO: load lights from scene
         front_light = self.plgr.create({
             "type": "sphere",
             "center": Point(3.0, 6.0, 4.0),
@@ -105,9 +121,22 @@ class MitsubaRenderer(AbstractRenderer):
             "intensity": Spectrum(5.0)
             });
 
+        out_light = self.plgr.create({
+            "type": "constant",
+            "radiance": Spectrum(0.5),
+            "samplingWeight": 10.0
+            });
+
+        env_light = self.plgr.create({
+            "type": "envmap",
+            "filename": os.path.join(ENVMAP_DIR, "uffizi-large.exr"),
+            "samplingWeight": 10.0,
+            "scale": 0.4
+        });
+
         self.mitsuba_scene.addChild(front_light);
-        #self.mitsuba_scene.addChild(side_light);
-        #self.mitsuba_scene.addChild(back_light);
+        self.mitsuba_scene.addChild(env_light);
+        # self.mitsuba_scene.addChild(back_light);
 
     def __add_active_camera(self):
         active_view = self.scene.active_view;
@@ -151,7 +180,7 @@ class MitsubaRenderer(AbstractRenderer):
                 },
             "sampler": {
                 "type": "halton",
-                "sampleCount": 4,
+                "sampleCount": 8,
                 }
             });
         self.mitsuba_scene.addChild(mitsuba_camera);
@@ -186,7 +215,7 @@ class MitsubaRenderer(AbstractRenderer):
                 "type": ext[1:],
                 "filename": mesh_file,
                 "faceNormals": True,
-                "toWorld": total_transform
+                "toWorld": total_transform,
                 }
         setting.update(material_setting);
         target_shape = self.plgr.create(setting);
@@ -486,7 +515,7 @@ class MitsubaRenderer(AbstractRenderer):
         if self.scene.active_view.background == "d":
             reflectance = Spectrum(0.05);
         elif self.scene.active_view.background == "l":
-            reflectance = Spectrum(0.5);
+            reflectance = Spectrum(1.0);
         else:
             reflectance = Spectrum(0.0);
 
